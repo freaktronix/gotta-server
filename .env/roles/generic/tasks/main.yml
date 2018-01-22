@@ -10,6 +10,9 @@
     state: latest
   with_items:
     - build-essential
+    - libprotobuf-c1
+    - libprotobuf-c-dev
+    - protobuf-c-compiler
 
 - name: create symlink
   file:
