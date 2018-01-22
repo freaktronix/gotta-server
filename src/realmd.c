@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -10,16 +11,37 @@
 #define REALMD_PORT "17420"
 #define REALMD_SOCKET_QUEUE 128
 
-typedef struct {
-	int sock;
-} realmd_listener_t;
+typedef struct realmd_peer_t realmd_peer_t;
 
 typedef struct {
 	int sock;
-} realmd_peer_t;
+	realmd_peer_t *peers;
+} realmd_listener_t;
+
+struct realmd_peer_t {
+	int sock;
+	struct sockaddr_in *client;
+	int addrlen;
+	realmd_peer_t *next;
+};
 
 void realmd_loop(realmd_listener_t *gotta)
 {
+	realmd_peer_t peer;
+	bool running = true;
+
+	while(running) {
+		peer.sock = accept(
+				gotta->sock,
+				(struct sockaddr *) &peer.client,
+				(socklen_t *) &peer.addrlen);
+
+		if(peer.sock >= 0)
+		{
+			realmd_new_peer(&peer);
+			fprintf(stdout, "> new peer is connected\n");
+		}
+	}
 }
 
 int realmd_start_listen(realmd_listener_t *gotta)

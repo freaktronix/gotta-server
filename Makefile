@@ -4,7 +4,7 @@ src/protobuf:
 	protoc-c --c_out=./src protobuf/auth.proto
 	${CC} ./src/protobuf/auth.pb-c.c -c -I./src -lprotobuf-c
 
-realmd:
+realmd: src/protobuf
 	${CC} ./src/realmd.c -o realmd
 
 clean:
