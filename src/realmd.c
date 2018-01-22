@@ -5,14 +5,24 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
+#define REALMD_VERSION "0.0.1"
+
 #define REALMD_PORT "17420"
 #define REALMD_SOCKET_QUEUE 128
 
 typedef struct {
 	int sock;
-} realmd_socket_t;
+} realmd_listener_t;
 
-int realmd_start_listen(realmd_socket_t *gotta)
+typedef struct {
+	int sock;
+} realmd_peer_t;
+
+void realmd_loop(realmd_listener_t *gotta)
+{
+}
+
+int realmd_start_listen(realmd_listener_t *gotta)
 {
 	struct addrinfo hints, *res, *resSave;
 	int n;
@@ -58,11 +68,20 @@ int realmd_start_listen(realmd_socket_t *gotta)
 
 int main()
 {
-	realmd_socket_t gotta;
+	realmd_listener_t gotta;
+
+	fprintf(stdout, "             _   _\n");
+	fprintf(stdout, "  __ _  ___ | |_| |_ __ _\n");
+	fprintf(stdout, " / _` |/ _ \\| __| __/ _` |\n");
+	fprintf(stdout, "| (_| | (_) | |_| || (_| |\n");
+	fprintf(stdout, " \\__, |\\___/ \\__|\\__\\__,_|\n");
+	fprintf(stdout, " |___/ version: %s\n\n", REALMD_VERSION);
+	fprintf(stdout, "> starting server...\n");
 
 	if(realmd_start_listen(&gotta) >= 0)
 	{
-		fprintf(stdout, "Starting GOTTA server...");
+		fprintf(stdout, "> listening on port %s\n", REALMD_PORT);
+		realmd_loop(&gotta);
 		close(gotta.sock);
 	}
 
