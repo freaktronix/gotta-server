@@ -1,4 +1,3 @@
 /realmd
-/pb
 /src/protobuf
 *.o
