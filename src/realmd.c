@@ -6,24 +6,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-#define REALMD_VERSION "0.0.1"
-
-#define REALMD_PORT "17420"
-#define REALMD_SOCKET_QUEUE 128
-
-typedef struct realmd_peer_t realmd_peer_t;
-
-typedef struct {
-	int sock;
-	realmd_peer_t *peers;
-} realmd_listener_t;
-
-struct realmd_peer_t {
-	int sock;
-	struct sockaddr_in *client;
-	int addrlen;
-	realmd_peer_t *next;
-};
+#include "realmd.h"
 
 void realmd_loop(realmd_listener_t *gotta)
 {
@@ -42,6 +25,11 @@ void realmd_loop(realmd_listener_t *gotta)
 			fprintf(stdout, "> new peer is connected\n");
 		}
 	}
+}
+
+void realmd_new_peer(realmd_peer_t *peer)
+{
+	// do something
 }
 
 int realmd_start_listen(realmd_listener_t *gotta)
@@ -98,7 +86,7 @@ int main()
 	fprintf(stdout, "| (_| | (_) | |_| || (_| |\n");
 	fprintf(stdout, " \\__, |\\___/ \\__|\\__\\__,_|\n");
 	fprintf(stdout, " |___/ version: %s\n\n", REALMD_VERSION);
-	fprintf(stdout, "> starting server...\n");
+	fprintf(stdout, "> starting realmd...\n");
 
 	if(realmd_start_listen(&gotta) >= 0)
 	{
