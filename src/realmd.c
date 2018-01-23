@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <string.h>
@@ -21,15 +22,50 @@ void realmd_loop(realmd_listener_t *gotta)
 
 		if(peer.sock >= 0)
 		{
-			realmd_new_peer(&peer);
+			realmd_new_peer(gotta, &peer);
 			fprintf(stdout, "> new peer is connected\n");
 		}
 	}
 }
 
-void realmd_new_peer(realmd_peer_t *peer)
+bool realmd_new_peer(realmd_listener_t *gotta, realmd_peer_t *peer)
 {
-	// do something
+	realmd_peer_t *new_peer = malloc(sizeof(realmd_peer_t));
+	struct sockaddr_in *client = malloc(sizeof(struct sockaddr_in));
+
+	if(new_peer == NULL)
+	{
+		return false;
+	}
+	else
+	{
+		if(client == NULL)
+		{
+			free(new_peer);
+			return false;
+		}
+	}
+
+	memset(new_peer, 0, sizeof(realmd_peer_t));
+	memset(client, 0, sizeof(struct sockaddr_in));
+	memcpy(client, peer->client, sizeof(struct sockaddr_in));
+	memcpy(new_peer, peer, sizeof(realmd_peer_t));
+
+	new_peer->client = client;
+
+	if(gotta->peers == NULL)
+	{
+		new_peer->next = NULL;
+		gotta->peers = new_peer;
+	}
+	else
+	{
+		new_peer->next = gotta->peers;
+		gotta->peers = new_peer;
+	}
+
+	fprintf(stdout, "> peer is subscribed\n");
+	return true;
 }
 
 int realmd_start_listen(realmd_listener_t *gotta)

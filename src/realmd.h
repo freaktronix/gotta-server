@@ -1,6 +1,8 @@
 #ifndef REALMD_H
 #define REALMD_H
 
+#include <stdbool.h>
+
 #define REALMD_VERSION "0.0.1"
 
 #define REALMD_PORT "17420"
@@ -20,9 +22,8 @@ struct realmd_peer_t {
 	realmd_peer_t *next;
 };
 
-void realmd_new_peer(realmd_peer_t *peer);
 void realmd_loop(realmd_listener_t *gotta);
-void realmd_new_peer(realmd_peer_t *peer);
+bool realmd_new_peer(realmd_listener_t *gotta, realmd_peer_t *peer);
 int realmd_start_listen(realmd_listener_t *gotta);
 
 #endif
