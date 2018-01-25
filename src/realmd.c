@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -13,6 +14,11 @@ void realmd_loop(realmd_listener_t *gotta)
 {
 	realmd_peer_t peer;
 	bool running = true;
+	long sock_opts;
+
+	sock_opts = fcntl(gotta->sock, F_GETFL);
+	sock_opts |= O_NONBLOCK;
+	fcntl(gotta->sock, F_SETFL, sock_opts);
 
 	while(running) {
 		peer.sock = accept(
@@ -24,6 +30,11 @@ void realmd_loop(realmd_listener_t *gotta)
 		{
 			realmd_new_peer(gotta, &peer);
 			fprintf(stdout, "> new peer is connected\n");
+		}
+
+		if(gotta->peers != NULL)
+		{
+			realmd_peer_recv(gotta);
 		}
 	}
 }
@@ -68,9 +79,33 @@ bool realmd_new_peer(realmd_listener_t *gotta, realmd_peer_t *peer)
 	return true;
 }
 
+void realmd_peer_recv(realmd_listener_t *gotta)
+{
+	realmd_peer_t *peer = gotta->peers;
+	char buffer[REALMD_BUFFER_SIZE + 1];
+	int c;
+
+	while(peer)
+	{
+		memset(buffer, 0, sizeof(char) * (REALMD_BUFFER_SIZE + 1));
+		c = recv(peer->sock,
+				buffer,
+				REALMD_BUFFER_SIZE,
+				MSG_WAITALL);
+		buffer[REALMD_BUFFER_SIZE + 1] = '\0';
+
+		// plaintext expected for initial tests
+		// has to be replaced with protobuf
+		if(c > 0)
+			fprintf(stdout, "> client msg: %s\n", buffer);
+
+		peer = peer->next;
+	}
+}
+
 int realmd_start_listen(realmd_listener_t *gotta)
 {
-	struct addrinfo hints, *res, *resSave;
+	struct addrinfo hints, *res, *res_save;
 	int n;
 
 	memset(&hints, 0, sizeof(struct addrinfo));
@@ -82,7 +117,7 @@ int realmd_start_listen(realmd_listener_t *gotta)
 
 	if(n >= 0)
 	{
-		resSave = res;
+		res_save = res;
 		while(res)
 		{
 			gotta->sock = socket(
@@ -106,7 +141,7 @@ int realmd_start_listen(realmd_listener_t *gotta)
 			listen(gotta->sock, REALMD_SOCKET_QUEUE);
 		}
 
-		freeaddrinfo(resSave);
+		freeaddrinfo(res_save);
 	}
 
 	return gotta->sock;
@@ -123,6 +158,7 @@ int main()
 	fprintf(stdout, " \\__, |\\___/ \\__|\\__\\__,_|\n");
 	fprintf(stdout, " |___/ version: %s\n\n", REALMD_VERSION);
 	fprintf(stdout, "> starting realmd...\n");
+	memset(&gotta, 0, sizeof(realmd_listener_t));
 
 	if(realmd_start_listen(&gotta) >= 0)
 	{
